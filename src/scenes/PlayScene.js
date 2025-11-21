@@ -29,6 +29,7 @@ class PlayScene extends Phaser.Scene {
         this.createBG()
         this.createBird()
         this.createPipes()
+        this.createColliders()
         this.handleInputs()
     }
 
@@ -45,15 +46,16 @@ class PlayScene extends Phaser.Scene {
     createBird() {
         this.bird = this.physics.add.sprite(this.config.startPosition.x, this.config.startPosition.y, "bird").setOrigin(0);
         this.bird.body.gravity.y = 400
+        this.bird.setCollideWorldBounds(true)
     }
 
     createPipes() {
         this.pipes = this.physics.add.group()
 
         for (let i = 0; i < PIPES_TO_RENDER; i++) {
-            const upperPipe = this.pipes.create(0, 0, "pipe").setOrigin(0, 1);
+            const upperPipe = this.pipes.create(0, 0, "pipe").setImmovable(true).setOrigin(0, 1);
 
-            const lowerPipe = this.pipes.create(0, 0, "pipe").setOrigin(0);
+            const lowerPipe = this.pipes.create(0, 0, "pipe").setImmovable(true).setOrigin(0);
 
             this.placePipe(upperPipe, lowerPipe)
         }
@@ -61,14 +63,17 @@ class PlayScene extends Phaser.Scene {
         this.pipes.setVelocityX(-this.velocity)
     }
 
+    createColliders() {
+        this.physics.add.collider(this.bird, this.pipes, this.gameOver, null, this)
+    }
     handleInputs() {
         this.input.on("pointerdown", this.flap, this)
         this.input.keyboard.on("keydown-SPACE", this.flap, this)
     }
 
     checkGameStatus() {
-        if (this.bird.y > this.config.height || this.bird.y < -this.bird.height) {
-            this.restartPlayerPosition()
+        if (this.bird.getBounds().bottom >= this.config.height || this.bird.getBounds().top <= 0) {
+            this.gameOver()
         }
     }
 
@@ -134,12 +139,14 @@ class PlayScene extends Phaser.Scene {
     }
 
 
-    restartPlayerPosition() {
-        this.bird.y = this.config.startPosition.y
-        this.bird.x = this.config.startPosition.x
-        this.bird.body.velocity.y = 0
-    }
+    gameOver() {
+        // this.bird.y = this.config.startPosition.y
+        // this.bird.x = this.config.startPosition.x
+        // this.bird.body.velocity.y = 0
 
+        this.physics.pause()
+        this.bird.setTint(0xff0000)
+    }
 
 }
 
