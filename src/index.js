@@ -1,5 +1,7 @@
 import Phaser from "phaser";
 import PlayScene from "./scenes/PlayScene";
+import MenueScene from "./scenes/MenuScene";
+import PreloadScene from "./scenes/PreloadScene";
 
 const WIDTH = 400
 const HEIGHT = 300
@@ -17,7 +19,7 @@ const config = {
   physics: {
     default: "arcade",
   },
-  scene: [new PlayScene(SHARED_CONFIG)]
+  scene: [PreloadScene, new MenueScene(), new PlayScene(SHARED_CONFIG)]
 }
 
 
