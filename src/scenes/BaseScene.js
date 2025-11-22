@@ -15,6 +15,11 @@ class BaseScene extends Phaser.Scene {
 
     create() {
         this.add.image(0, 0, "sky-bg").setOrigin(0, 0);
+        if (this.config.canGoBack) {
+            this.add.image(10, 10, "back").setOrigin(0).setScale(1.5).setInteractive().on("pointerdown", () => {
+                this.scene.start("MenuScene")
+            })
+        }
     }
 
 
