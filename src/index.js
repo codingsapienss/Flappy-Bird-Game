@@ -13,13 +13,18 @@ const SHARED_CONFIG = {
   startPosition: BIRD_POSITION
 }
 
+const Scenes = [PreloadScene, MenueScene, PlayScene]
+
+const initScenes = () => Scenes.map((Scene) => new Scene(SHARED_CONFIG))
+
+
 const config = {
   type: Phaser.AUTO,
   ...SHARED_CONFIG,
   physics: {
     default: "arcade",
   },
-  scene: [PreloadScene, new MenueScene(), new PlayScene(SHARED_CONFIG)]
+  scene: initScenes()
 }
 
 
