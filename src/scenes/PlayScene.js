@@ -10,17 +10,37 @@ class PlayScene extends BaseScene {
         this.bird = null
         this.pipes = null
 
+        this.isPaused = false
+
         this.pipeHorizontalDistance = 0
         this.pipeVerticalDistanceRange = [100, 150]
-        this.pipeHorizontalDistanceRange = [350, 400]
+        this.pipeHorizontalDistanceRange = [500, 600]
         this.flapVelocity = 250
         this.velocity = 200
 
         this.score = 0
         this.scoreText = ""
+
+
+        this.currentDifficulty = "easy"
+        this.difficulties = {
+            "easy": {
+                pipeHorizontalDistanceRange: [500, 600],
+                pipeVerticalDistanceRange: [250, 300]
+            },
+            "normal": {
+                pipeHorizontalDistanceRange: [400, 500],
+                pipeVerticalDistanceRange: [200, 250]
+            },
+            "hard": {
+                pipeHorizontalDistanceRange: [300, 400],
+                pipeVerticalDistanceRange: [150, 200]
+            },
+        }
     }
 
     create() {
+        this.currentDifficulty = "easy"
         super.create()
         this.createBird()
         this.createPipes()
@@ -29,6 +49,15 @@ class PlayScene extends BaseScene {
         this.createColliders()
         this.handleInputs()
         this.listenToEvents()
+
+        this.anims.create({
+            key: "fly",
+            frames: this.anims.generateFrameNumbers('bird', { start: 8, end: 15 }),
+            frameRate: 8,
+            repeat: -1
+        })
+
+        this.bird.play('fly')
     }
 
     update() {
@@ -57,6 +86,7 @@ class PlayScene extends BaseScene {
         this.countDownText.setText("Fly in : " + this.initialTime)
 
         if (this.initialTime <= 0) {
+            this.isPaused = false
             this.countDownText.setText("")
             this.physics.resume()
             this.timeEvent.remove()
@@ -68,7 +98,9 @@ class PlayScene extends BaseScene {
     }
 
     createBird() {
-        this.bird = this.physics.add.sprite(this.config.startPosition.x, this.config.startPosition.y, "bird").setOrigin(0);
+        this.bird = this.physics.add.sprite(this.config.startPosition.x, this.config.startPosition.y, "bird").setOrigin(0).setFlipX(true).setScale(2.5);
+
+        this.bird.setBodySize(this.bird.width, this.bird.height - 8)
         this.bird.body.gravity.y = 400
         this.bird.setCollideWorldBounds(true)
     }
@@ -88,9 +120,11 @@ class PlayScene extends BaseScene {
     }
 
     createPauseButton() {
+        this.isPaused = false
         const pauseButton = this.add.image(this.config.width - 10, this.config.height - 10, "pause").setInteractive().setScale(2).setOrigin(1)
 
         pauseButton.on("pointerdown", () => {
+            this.isPaused = "ture"
             this.physics.pause()
             this.scene.pause()
             this.scene.launch("PauseScene")
@@ -122,13 +156,16 @@ class PlayScene extends BaseScene {
     }
 
     placePipe(uPipe, lPipe) {
+
+        const difficulty = this.difficulties[this.currentDifficulty]
+
         const rightMostX = this.getRightMostPipe()
 
         const pipeVerticalDistance = Phaser.Math.Between(...this.pipeVerticalDistanceRange);
 
         const pipeVerticalPosition = Phaser.Math.Between(0 + 20, this.config.height - 20 - pipeVerticalDistance);
 
-        const pipeHorizontalDistance = Phaser.Math.Between(...this.pipeHorizontalDistanceRange);
+        const pipeHorizontalDistance = Phaser.Math.Between(...difficulty.pipeHorizontalDistanceRange);
 
         uPipe.x = rightMostX + pipeHorizontalDistance
         uPipe.y = pipeVerticalPosition
@@ -138,21 +175,9 @@ class PlayScene extends BaseScene {
 
     }
 
-    recyclePipes() {
-        const tempPipes = []
-
-        this.pipes.getChildren().forEach((pipe) => {
-            if (pipe.getBounds().right <= 0) {
-                tempPipes.push(pipe)
-                if (tempPipes.length === 2) {
-                    this.placePipe(...tempPipes)
-                }
-            }
-        })
-
-    }
 
     flap() {
+        if (this.isPaused) return;
         this.bird.body.velocity.y = -this.flapVelocity
     }
 
@@ -167,10 +192,19 @@ class PlayScene extends BaseScene {
                     this.placePipe(...tempPipes)
                     this.increaseScore()
                     this.saveBestScore()
+                    this.increaseDifficulty()
                 }
             }
         })
+    }
 
+    increaseDifficulty() {
+        if (this.score === 5) {
+            this.currentDifficulty = "normal"
+        }
+        if (this.scale == 10) {
+            this.currentDifficulty = "hard"
+        }
     }
 
     getRightMostPipe() {
